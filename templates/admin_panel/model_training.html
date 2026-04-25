@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Model Training{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-brain"></i> Model Training Configuration</h2>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newConfigModal">
+                <i class="fas fa-plus"></i> New Training Config
+            </button>
+            <a href="{% url 'admin_panel:live_training' %}" class="btn btn-info ms-2">
+                <i class="fas fa-play-circle"></i> Live Training Monitor
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Note:</strong> Training configurations are created here. 
+                To actually train the model, use the external training script provided 
+                in the setup documentation.
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Training Configurations</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Config Name</th>
+                            <th>Model Type</th>
+                            <th>Learning Rate</th>
+                            <th>Batch Size</th>
+                            <th>Epochs</th>
+                            <th>CSDW</th>
+                            <th>Layer Exchange</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for config in configurations %}
+                        <tr>
+                            <td><strong>{{ config.name }}</strong></td>
+                            <td><span class="badge bg-info">{{ config.model_type }}</span></td>
+                            <td>{{ config.learning_rate }}</td>
+                            <td>{{ config.batch_size }}</td>
+                            <td>{{ config.epochs }}</td>
+                            <td>
+                                {% if config.csdw_enabled %}
+                                <i class="fas fa-check text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times text-danger"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if config.layer_exchange_enabled %}
+                                <i class="fas fa-check text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times text-danger"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if config.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ config.created_at|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-terminal"></i> Training Options</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Command Line Training:</h6>
+                            <pre class="bg-dark text-white p-3 rounded"><code>python train_model.py --config_id &lt;CONFIG_ID&gt; --dataset_id &lt;DATASET_ID&gt;</code></pre>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Web Interface Training:</h6>
+                            <p>Select a configuration and dataset below to start training directly from the browser.</p>
+                            <form method="POST" action="{% url 'admin_panel:start_training' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <select class="form-select" name="config_id" required>
+                                        <option value="">Select Configuration</option>
+                                        {% for config in configurations %}
+                                        <option value="{{ config.id }}">{{ config.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <select class="form-select" name="dataset_id" required>
+                                        <option value="">Select Dataset</option>
+                                        {% for dataset in datasets %}
+                                        <option value="{{ dataset.id }}">{{ dataset.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-play"></i> Start Training
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Config Modal -->
+<div class="modal fade" id="newConfigModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Training Configuration</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Configuration Name</label>
+                            <input type="text" class="form-control" name="config_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Dataset</label>
+                            <select class="form-select" name="dataset" required>
+                                <option value="">Select Dataset</option>
+                                {% for dataset in datasets %}
+                                <option value="{{ dataset.id }}">{{ dataset.name }} ({{ dataset.dataset_type }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Learning Rate</label>
+                            <input type="number" class="form-control" name="learning_rate" 
+                                   value="0.001" step="0.0001" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Batch Size</label>
+                            <input type="number" class="form-control" name="batch_size" 
+                                   value="16" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Epochs</label>
+                            <input type="number" class="form-control" name="epochs" 
+                                   value="100" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Configuration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

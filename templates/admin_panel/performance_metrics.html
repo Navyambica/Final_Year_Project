@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Performance Metrics{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-chart-bar"></i> Performance Metrics</h2>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-primary">{{ avg_metrics.avg_precision|default:"N/A"|floatformat:4 }}</h3>
+                    <p class="text-muted">Avg Precision</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-success">{{ avg_metrics.avg_recall|default:"N/A"|floatformat:4 }}</h3>
+                    <p class="text-muted">Avg Recall</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-warning">{{ avg_metrics.avg_f1|default:"N/A"|floatformat:4 }}</h3>
+                    <p class="text-muted">Avg F1-Score</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-info">{{ avg_metrics.avg_iou|default:"N/A"|floatformat:4 }}</h3>
+                    <p class="text-muted">Avg IoU</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Training History</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Configuration</th>
+                            <th>Dataset</th>
+                            <th>Epoch</th>
+                            <th>Train Loss</th>
+                            <th>Val Loss</th>
+                            <th>Precision</th>
+                            <th>Recall</th>
+                            <th>F1-Score</th>
+                            <th>IoU</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in training_logs %}
+                        <tr>
+                            <td>{{ log.configuration.name }}</td>
+                            <td><span class="badge bg-primary">{{ log.dataset.dataset_type }}</span></td>
+                            <td>{{ log.epoch }}</td>
+                            <td>{{ log.train_loss|floatformat:4 }}</td>
+                            <td>{{ log.val_loss|default:"N/A"|floatformat:4 }}</td>
+                            <td>{{ log.precision|default:"N/A"|floatformat:4 }}</td>
+                            <td>{{ log.recall|default:"N/A"|floatformat:4 }}</td>
+                            <td>{{ log.f1_score|default:"N/A"|floatformat:4 }}</td>
+                            <td>{{ log.iou|default:"N/A"|floatformat:4 }}</td>
+                            <td>{{ log.timestamp|date:"M d, H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center text-muted">
+                                No training logs available. Start training to see metrics.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

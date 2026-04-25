@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detection Results{% endblock %}
+
+{% block extra_css %}
+<style>
+    .results-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .result-image {
+        width: 100%;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .legend-color {
+        width: 30px;
+        height: 30px;
+        border-radius: 5px;
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-chart-line"></i> Change Detection Results</h2>
+            <p class="text-muted">Job: <strong>{{ job.job_name }}</strong></p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="metric-card">
+                <i class="fas fa-exchange-alt fa-2x mb-2"></i>
+                <div class="metric-value">{{ job.change_percentage|floatformat:2 }}%</div>
+                <p>Change Detected</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <i class="fas fa-map-marked-alt fa-2x mb-2"></i>
+                <div class="metric-value">{{ job.changed_pixels|floatformat:0 }}</div>
+                <p>Changed Pixels</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <i class="fas fa-equals fa-2x mb-2"></i>
+                <div class="metric-value">{{ job.unchanged_pixels|floatformat:0 }}</div>
+                <p>Unchanged Pixels</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-map"></i> Change Detection Map</h5>
+                </div>
+                <div class="card-body">
+                    {% if job.result_image %}
+                    <img src="{{ job.result_image.url }}" alt="Change Map" class="result-image">
+                    {% else %}
+                    <p class="text-center text-muted">No result image available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Legend</h5>
+                </div>
+                <div class="card-body">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #00ff00;"></div>
+                        <span><strong>Green:</strong> Unchanged Areas</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #ff0000;"></div>
+                        <span><strong>Red:</strong> Changed Areas</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-download"></i> Download</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ job.result_image.url }}" download class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-image"></i> Download Change Map
+                    </a>
+                    
+                </div>
+            </div>
+
+            {% if detection_result %}
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Performance</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Processing Time:</strong><br>{{ detection_result.processing_time|floatformat:2 }} seconds</p>
+                    <p><strong>Completed:</strong><br>{{ job.completed_at|date:"M d, Y H:i:s" }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <a href="{% url 'change_detection:upload' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> New Detection Job
+            </a>
+            <a href="{% url 'change_detection:history' %}" class="btn btn-primary">
+                <i class="fas fa-history"></i> View History
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function downloadReport() {
+        alert('Report generation feature coming soon!');
+    }
+</script>
+{% endblock %}

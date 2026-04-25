@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Dataset{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-upload"></i> Upload Dataset</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Dataset Format:</strong> Upload a ZIP file containing three directories:
+                        <code>A/</code> (before images), <code>B/</code> (after images), and <code>label/</code> (ground truth masks).
+                        All directories should contain matching filenames.
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Dataset Name</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Dataset Type</label>
+                            <select class="form-select" name="dataset_type" required>
+                                <option value="">Select Type</option>
+                                <option value="CLCD">CLCD</option>
+                                <option value="PX-CLCD">PX-CLCD</option>
+                                <option value="LEVIR-CD">LEVIR-CD</option>
+                                <option value="S2Looking">S2Looking</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3" required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Dataset ZIP File</label>
+                            <input type="file" class="form-control" name="dataset_zip" accept=".zip" required>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Upload Dataset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

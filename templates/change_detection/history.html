@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detection History{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-history"></i> Detection History</h2>
+            <p class="text-muted">View all your previous change detection jobs</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {% if jobs %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Job Name</th>
+                            <th>Status</th>
+                            <th>Change %</th>
+                            <th>Created</th>
+                            <th>Completed</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ job.job_name }}</td>
+                            <td>
+                                {% if job.status == 'completed' %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check"></i> Completed
+                                </span>
+                                {% elif job.status == 'processing' %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-spinner"></i> Processing
+                                </span>
+                                {% elif job.status == 'failed' %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times"></i> Failed
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-clock"></i> Pending
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if job.change_percentage %}
+                                {{ job.change_percentage|floatformat:2 }}%
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </td>
+                            <td>{{ job.created_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                {% if job.completed_at %}
+                                {{ job.completed_at|date:"M d, Y H:i" }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if job.status == 'completed' %}
+                                <a href="{% url 'change_detection:results' job.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                {% elif job.status == 'pending' %}
+                                <a href="{% url 'change_detection:process' job.id %}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-play"></i> Process
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-5x text-muted mb-3"></i>
+                <h4>No detection jobs yet</h4>
+                <p class="text-muted">Start by uploading your first pair of images</p>
+                <a href="{% url 'change_detection:upload' %}" class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Upload Images
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

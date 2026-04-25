@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}All Results{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-chart-line"></i> All Results Overview</h2>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-primary">{{ total_jobs }}</h3>
+                    <p class="text-muted">Total Jobs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-success">{{ completed_jobs }}</h3>
+                    <p class="text-muted">Completed Jobs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-warning">{{ total_training_sessions }}</h3>
+                    <p class="text-muted">Training Sessions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-info">{{ avg_change_metrics.avg_time|default:"N/A"|floatformat:2 }}s</h3>
+                    <p class="text-muted">Avg Processing Time</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Detection Metrics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-search"></i> Change Detection Performance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-primary">{{ avg_change_metrics.avg_precision|default:"N/A"|floatformat:4 }}</h4>
+                                <p class="text-muted">Avg Precision</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-success">{{ avg_change_metrics.avg_recall|default:"N/A"|floatformat:4 }}</h4>
+                                <p class="text-muted">Avg Recall</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-warning">{{ avg_change_metrics.avg_f1|default:"N/A"|floatformat:4 }}</h4>
+                                <p class="text-muted">Avg F1-Score</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-info">{{ avg_change_metrics.avg_iou|default:"N/A"|floatformat:4 }}</h4>
+                                <p class="text-muted">Avg IoU</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Training Metrics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-brain"></i> Training Performance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-danger">{{ avg_training_metrics.avg_train_loss|default:"N/A"|floatformat:4 }}</h4>
+                                <p class="text-muted">Avg Train Loss</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-warning">{{ avg_training_metrics.avg_val_loss|default:"N/A"|floatformat:4 }}</h4>
+                                <p class="text-muted">Avg Val Loss</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-primary">{{ avg_training_metrics.avg_f1|default:"N/A"|floatformat:4 }}</h4>
+                                <p class="text-muted">Avg F1-Score</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-info">{{ avg_training_metrics.avg_iou|default:"N/A"|floatformat:4 }}</h4>
+                                <p class="text-muted">Avg IoU</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Detection Jobs Table -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Change Detection Jobs</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Job Name</th>
+                                    <th>User</th>
+                                    <th>Status</th>
+                                    <th>Changed Pixels</th>
+                                    <th>Change %</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for job in jobs %}
+                                <tr>
+                                    <td><strong>{{ job.job_name }}</strong></td>
+                                    <td>{{ job.user.username }}</td>
+                                    <td>
+                                        <span class="badge bg-success">Completed</span>
+                                    </td>
+                                    <td>{{ job.changed_pixels|default:"N/A" }}</td>
+                                    <td>{{ job.change_percentage|default:"N/A"|floatformat:2 }}%</td>
+                                    <td>{{ job.created_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'change_detection:results' job.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Training Logs Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Training Logs</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Configuration</th>
+                                    <th>Dataset</th>
+                                    <th>Epoch</th>
+                                    <th>Train Loss</th>
+                                    <th>Val Loss</th>
+                                    <th>F1-Score</th>
+                                    <th>IoU</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in training_logs %}
+                                <tr>
+                                    <td>{{ log.configuration.name }}</td>
+                                    <td>{{ log.dataset.name }}</td>
+                                    <td>{{ log.epoch }}</td>
+                                    <td>{{ log.train_loss|floatformat:4 }}</td>
+                                    <td>{{ log.val_loss|default:"N/A"|floatformat:4 }}</td>
+                                    <td>{{ log.f1_score|default:"N/A"|floatformat:4 }}</td>
+                                    <td>{{ log.iou|default:"N/A"|floatformat:4 }}</td>
+                                    <td>{{ log.timestamp|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Images{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .image-preview {
+        border: 2px dashed #ccc;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+    }
+    .image-preview img {
+        max-width: 100%;
+        max-height: 180px;
+        border-radius: 5px;
+    }
+    .upload-icon {
+        font-size: 50px;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-cloud-upload-alt"></i> Upload Bitemporal Images</h4>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Job Name</label>
+                    <input type="text" class="form-control" name="job_name" required 
+                           placeholder="e.g., Urban Growth Analysis 2020-2025">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-image"></i> Time Period 1 (Earlier Image)
+                        </label>
+                        <div class="image-preview" id="preview1">
+                            <div>
+                                <i class="fas fa-image upload-icon"></i>
+                                <p class="text-muted mt-2">Click to select image</p>
+                            </div>
+                        </div>
+                        <input type="file" class="form-control mt-2" name="image_time1" 
+                               id="imageTime1" accept="image/*" required>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-image"></i> Time Period 2 (Later Image)
+                        </label>
+                        <div class="image-preview" id="preview2">
+                            <div>
+                                <i class="fas fa-image upload-icon"></i>
+                                <p class="text-muted mt-2">Click to select image</p>
+                            </div>
+                        </div>
+                        <input type="file" class="form-control mt-2" name="image_time2" 
+                               id="imageTime2" accept="image/*" required>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Note:</strong> Upload two satellite images of the same geographic area 
+                    captured at different time periods. Images will be automatically preprocessed 
+                    and aligned for change detection.
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    <i class="fas fa-arrow-right"></i> Upload and Continue
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Image preview functionality
+    document.getElementById('imageTime1').addEventListener('change', function(e) {
+        previewImage(e.target, 'preview1');
+    });
+
+    document.getElementById('imageTime2').addEventListener('change', function(e) {
+        previewImage(e.target, 'preview2');
+    });
+
+    function previewImage(input, previewId) {
+        const preview = document.getElementById(previewId);
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+{% endblock %}

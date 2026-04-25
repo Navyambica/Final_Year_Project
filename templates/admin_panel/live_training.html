@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Live Training{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-play-circle"></i> Live Training Monitor</h2>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                This page updates automatically to show real-time training progress.
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Training Sessions -->
+    <div id="training-sessions">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-cogs"></i> Active Training Sessions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p>Loading training sessions...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Training Logs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Recent Training Logs</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Configuration</th>
+                                    <th>Dataset</th>
+                                    <th>Epoch</th>
+                                    <th>Train Loss</th>
+                                    <th>Val Loss</th>
+                                    <th>F1-Score</th>
+                                    <th>IoU</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logs-table-body">
+                                {% for log in recent_logs %}
+                                <tr>
+                                    <td>{{ log.configuration.name }}</td>
+                                    <td>{{ log.dataset.name }}</td>
+                                    <td>{{ log.epoch }}</td>
+                                    <td>{{ log.train_loss|floatformat:4 }}</td>
+                                    <td>{{ log.val_loss|default:"N/A"|floatformat:4 }}</td>
+                                    <td>{{ log.f1_score|default:"N/A"|floatformat:4 }}</td>
+                                    <td>{{ log.iou|default:"N/A"|floatformat:4 }}</td>
+                                    <td>{{ log.timestamp|date:"H:i:s" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let lastLogTimestamp = null;
+
+// Initialize timestamps
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the timestamp of the last log for incremental updates
+    const logRows = document.querySelectorAll('#logs-table-body tr');
+    if (logRows.length > 0) {
+        const lastRow = logRows[logRows.length - 1];
+        const timestampCell = lastRow.cells[7];
+        if (timestampCell) {
+            lastLogTimestamp = timestampCell.textContent.trim();
+        }
+    }
+
+    // Start polling
+    updateTrainingStatus();
+    setInterval(updateTrainingStatus, 2000); // Update every 2 seconds
+});
+
+function updateTrainingStatus() {
+    fetch('{% url "admin_panel:training_status_api" %}')
+        .then(response => response.json())
+        .then(data => {
+            updateTrainingSessions(data.training_sessions);
+        })
+        .catch(error => {
+            console.error('Error fetching training status:', error);
+        });
+}
+
+function updateTrainingSessions(sessions) {
+    const container = document.getElementById('training-sessions');
+
+    if (sessions.length === 0) {
+        container.innerHTML = `
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0"><i class="fas fa-pause"></i> No Active Training Sessions</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-center text-muted">No training sessions are currently running.</p>
+                            <div class="text-center">
+                                <a href="{% url 'admin_panel:model_training' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Start New Training
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="row mb-4">';
+    sessions.forEach(session => {
+        const progressPercent = Math.round(session.progress);
+        html += `
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="fas fa-cog fa-spin"></i> ${session.name}</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Epoch ${session.epoch} / ${session.total_epochs}</span>
+                                <span>${progressPercent}%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                     role="progressbar" style="width: ${progressPercent}%"
+                                     aria-valuenow="${progressPercent}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="metric-box">
+                                    <h5 class="text-danger">${session.train_loss ? session.train_loss.toFixed(4) : 'N/A'}</h5>
+                                    <small class="text-muted">Train Loss</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-box">
+                                    <h5 class="text-warning">${session.val_loss ? session.val_loss.toFixed(4) : 'N/A'}</h5>
+                                    <small class="text-muted">Val Loss</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row text-center mt-2">
+                            <div class="col-12">
+                                <div class="metric-box">
+                                    <h4 class="text-primary">${session.f1_score ? session.f1_score.toFixed(4) : 'N/A'}</h4>
+                                    <small class="text-muted">F1-Score</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${session.started_at ? `
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                Started: ${new Date(session.started_at).toLocaleString()}
+                            </small>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+
+    container.innerHTML = html;
+}
+
+function updateLogs() {
+    // This would fetch new logs since lastLogTimestamp
+    // For now, we'll rely on page refresh for logs
+}
+</script>
+
+<style>
+.metric-box {
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+</style>
+{% endblock %}
